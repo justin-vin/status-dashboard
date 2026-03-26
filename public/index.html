@@ -64,7 +64,7 @@
     .avatar-wrapper {
       width: 240px;
       height: 240px;
-      border-radius: 24px;
+      border-radius: 12px;
       overflow: hidden;
       background: transparent;
       box-shadow: 0 4px 24px rgba(70, 130, 180, 0.2);
@@ -315,7 +315,7 @@
         gap: 0.5rem;
       }
       .stat-value { font-size: 1.5rem; }
-      .avatar-wrapper { width: 200px; height: 200px; border-radius: 20px; }
+      .avatar-wrapper { width: 200px; height: 200px; border-radius: 10px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -361,14 +361,13 @@
       <div class="ticket-bar">
         <div class="ticket-bar-label">Board</div>
         <div class="ticket-bar-visual" id="ticket-bar">
-          <div class="segment done" style="width: 0%"></div>
-          <div class="segment doing" style="width: 0%"></div>
           <div class="segment todo" style="width: 0%"></div>
+          <div class="segment doing" style="width: 0%"></div>
         </div>
         <div class="ticket-legend">
-          <span><span class="legend-dot" style="background: var(--green)"></span> Done <b id="done-count">0</b></span>
-          <span><span class="legend-dot" style="background: var(--accent)"></span> Doing <b id="doing-count">0</b></span>
           <span><span class="legend-dot" style="background: var(--yellow)"></span> To Do <b id="todo-count">0</b></span>
+          <span><span class="legend-dot" style="background: var(--accent)"></span> Doing <b id="doing-count">0</b></span>
+          <span><span class="legend-dot" style="background: var(--green)"></span> Done <b id="done-count">0</b></span>
         </div>
       </div>
     </div>
@@ -448,15 +447,14 @@
       document.getElementById('tickets-done').textContent = data.tickets?.done ?? '—';
       document.getElementById('total-commits').textContent = data.commits?.total ?? '—';
 
-      // Ticket bar
+      // Ticket bar (only todo + doing, no done)
       const tickets = data.tickets || {};
-      const total = (tickets.done || 0) + (tickets.doing || 0) + (tickets.todo || 0);
-      if (total > 0) {
+      const activeTotal = (tickets.doing || 0) + (tickets.todo || 0);
+      if (activeTotal > 0) {
         const bar = document.getElementById('ticket-bar');
         const segments = bar.querySelectorAll('.segment');
-        segments[0].style.width = `${(tickets.done / total) * 100}%`;
-        segments[1].style.width = `${(tickets.doing / total) * 100}%`;
-        segments[2].style.width = `${(tickets.todo / total) * 100}%`;
+        segments[0].style.width = `${(tickets.todo / activeTotal) * 100}%`;
+        segments[1].style.width = `${(tickets.doing / activeTotal) * 100}%`;
       }
       document.getElementById('done-count').textContent = tickets.done || 0;
       document.getElementById('doing-count').textContent = tickets.doing || 0;
