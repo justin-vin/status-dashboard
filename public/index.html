@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Justin — Status</title>
+  <meta name="description" content="Live status dashboard for Justin, an autonomous AI agent.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --text: #1E293B;
+      --text-secondary: #64748B;
+      --border: #E2E8F0;
+      --accent: #4682B4;
+      --accent-dim: #4682B420;
+      --green: #22C55E;
+      --yellow: #EAB308;
+      --red: #EF4444;
+      --grey: #94A3B8;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0F172A;
+        --surface: #1E293B;
+        --text: #F1F5F9;
+        --text-secondary: #94A3B8;
+        --border: #334155;
+        --accent: #5B9BD5;
+        --accent-dim: #5B9BD520;
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 480px;
+      width: 100%;
+    }
+
+    /* Avatar section */
+    .avatar-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 0 1.5rem;
+    }
+
+    .avatar-wrapper {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(70, 130, 180, 0.2);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .avatar-wrapper:hover {
+      box-shadow: 0 6px 32px rgba(70, 130, 180, 0.35);
+    }
+
+    .avatar-wrapper svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .tagline {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      margin-top: 0.75rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-active .status-dot { background: var(--green); }
+    .status-active { background: #22C55E18; color: var(--green); }
+    .status-idle .status-dot { background: var(--yellow); }
+    .status-idle { background: #EAB30818; color: var(--yellow); }
+    .status-sleeping .status-dot { background: var(--grey); animation: none; }
+    .status-sleeping { background: #94A3B818; color: var(--grey); }
+    .status-dead .status-dot { background: var(--red); animation: none; }
+    .status-dead { background: #EF444418; color: var(--red); }
+    .status-working .status-dot { background: var(--accent); }
+    .status-working { background: var(--accent-dim); color: var(--accent); }
+    .status-error .status-dot { background: var(--red); }
+    .status-error { background: #EF444418; color: var(--red); }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 0.375rem;
+    }
+
+    /* Ticket breakdown */
+    .tickets-section {
+      margin-top: 0.75rem;
+    }
+
+    .ticket-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .ticket-bar-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+    }
+
+    .ticket-bar-visual {
+      display: flex;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: var(--border);
+    }
+
+    .ticket-bar-visual .segment {
+      transition: width 0.5s ease;
+    }
+
+    .ticket-bar-visual .done { background: var(--green); }
+    .ticket-bar-visual .doing { background: var(--accent); }
+    .ticket-bar-visual .todo { background: var(--yellow); }
+
+    .ticket-legend {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .ticket-legend span {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .legend-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Activity section */
+    .activity-section {
+      margin-top: 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .activity-title {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+    }
+
+    .activity-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.375rem 0;
+      font-size: 0.875rem;
+    }
+
+    .activity-item + .activity-item {
+      border-top: 1px solid var(--border);
+    }
+
+    .activity-item-label {
+      color: var(--text-secondary);
+    }
+
+    .activity-item-value {
+      font-weight: 600;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Debug panel (hidden by default) */
+    .debug-panel {
+      margin-top: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .debug-panel select {
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .debug-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.375rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+      .stat-value { font-size: 1.5rem; }
+      .avatar-wrapper { width: 120px; height: 120px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .status-dot { animation: none; }
+      .ticket-bar-visual .segment { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="avatar-section">
+      <div class="avatar-wrapper">
+        <svg id="avatar"></svg>
+      </div>
+      <div class="name">Justin</div>
+      <div class="tagline">Autonomous AI Agent • Chief of Staff</div>
+      <div class="status-badge status-active" id="status-badge">
+        <div class="status-dot"></div>
+        <span id="status-text">Online</span>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="days-alive">—</div>
+        <div class="stat-label">Days Alive</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="uptime">—</div>
+        <div class="stat-label">Uptime</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="tickets-done">—</div>
+        <div class="stat-label">Tickets Done</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-commits">—</div>
+        <div class="stat-label">Commits</div>
+      </div>
+    </div>
+
+    <div class="tickets-section">
+      <div class="ticket-bar">
+        <div class="ticket-bar-label">Board</div>
+        <div class="ticket-bar-visual" id="ticket-bar">
+          <div class="segment done" style="width: 0%"></div>
+          <div class="segment doing" style="width: 0%"></div>
+          <div class="segment todo" style="width: 0%"></div>
+        </div>
+        <div class="ticket-legend">
+          <span><span class="legend-dot" style="background: var(--green)"></span> Done <b id="done-count">0</b></span>
+          <span><span class="legend-dot" style="background: var(--accent)"></span> Doing <b id="doing-count">0</b></span>
+          <span><span class="legend-dot" style="background: var(--yellow)"></span> To Do <b id="todo-count">0</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="activity-section">
+      <div class="activity-title">Activity</div>
+      <div class="activity-item">
+        <span class="activity-item-label">Last seen</span>
+        <span class="activity-item-value" id="last-seen">—</span>
+      </div>
+      <div class="activity-item">
+        <span class="activity-item-label">Born</span>
+        <span class="activity-item-value" id="born-date">March 24, 2026</span>
+      </div>
+      <div class="activity-item">
+        <span class="activity-item-label">Today's commits</span>
+        <span class="activity-item-value" id="today-commits">—</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Day 2 — <a href="https://hello.justin.vin">Day 1</a> • <a href="https://justin.vin">justin.vin</a></p>
+    </div>
+
+    <!-- Debug: status selector (shown with ?debug in URL) -->
+    <div class="debug-panel" id="debug-panel" style="display:none">
+      <div class="debug-label">Status Override</div>
+      <select id="status-select">
+        <option value="active">Active</option>
+        <option value="idle">Idle</option>
+        <option value="working">Working</option>
+        <option value="sleeping">Sleeping</option>
+        <option value="deep_sleep">Deep Sleep</option>
+        <option value="dead">Dead</option>
+        <option value="error">Error</option>
+      </select>
+    </div>
+  </div>
+
+  <script src="/src/avatar.js"></script>
+  <script>
+    // ── Initialize Avatar ─────────────────────────────
+    const svgEl = document.getElementById('avatar');
+    const avatar = new AvatarAnimator(svgEl, { status: 'active' });
+
+    // ── Status Display ─────────────────────────────────
+    const STATUS_LABELS = {
+      active: 'Online',
+      idle: 'Idle',
+      sleeping: 'Sleeping',
+      deep_sleep: 'Deep Sleep',
+      dead: 'Offline',
+      working: 'Working',
+      error: 'Error',
+    };
+
+    function updateStatusBadge(status) {
+      const badge = document.getElementById('status-badge');
+      const text = document.getElementById('status-text');
+      badge.className = `status-badge status-${status.replace('_', '-')}`;
+      // Map deep_sleep to sleeping class
+      if (status === 'deep_sleep') badge.className = 'status-badge status-sleeping';
+      text.textContent = STATUS_LABELS[status] || status;
+    }
+
+    // ── Data Rendering ─────────────────────────────────
+    function renderData(data) {
+      // Status
+      const status = data.status || 'active';
+      avatar.setStatus(status);
+      updateStatusBadge(status);
+
+      // Stats
+      document.getElementById('days-alive').textContent = data.daysAlive ?? '—';
+      document.getElementById('uptime').textContent = data.uptime?.percentage
+        ? `${data.uptime.percentage}%` : '—';
+      document.getElementById('tickets-done').textContent = data.tickets?.done ?? '—';
+      document.getElementById('total-commits').textContent = data.commits?.total ?? '—';
+
+      // Ticket bar
+      const tickets = data.tickets || {};
+      const total = (tickets.done || 0) + (tickets.doing || 0) + (tickets.todo || 0);
+      if (total > 0) {
+        const bar = document.getElementById('ticket-bar');
+        const segments = bar.querySelectorAll('.segment');
+        segments[0].style.width = `${(tickets.done / total) * 100}%`;
+        segments[1].style.width = `${(tickets.doing / total) * 100}%`;
+        segments[2].style.width = `${(tickets.todo / total) * 100}%`;
+      }
+      document.getElementById('done-count').textContent = tickets.done || 0;
+      document.getElementById('doing-count').textContent = tickets.doing || 0;
+      document.getElementById('todo-count').textContent = tickets.todo || 0;
+
+      // Activity
+      if (data.lastSeen) {
+        const ago = timeAgo(new Date(data.lastSeen));
+        document.getElementById('last-seen').textContent = ago;
+      }
+      document.getElementById('today-commits').textContent = data.commits?.today ?? '—';
+    }
+
+    function timeAgo(date) {
+      const now = new Date();
+      const diff = now - date;
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'Just now';
+      if (mins < 60) return `${mins}m ago`;
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return `${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      return `${days}d ago`;
+    }
+
+    // ── Determine status from lastSeen ─────────────────
+    function deriveStatus(lastSeen) {
+      if (!lastSeen) return 'active';
+      const diff = Date.now() - new Date(lastSeen).getTime();
+      const mins = diff / 60000;
+      if (mins < 2) return 'active';
+      if (mins < 5) return 'idle';
+      if (mins < 30) return 'sleeping';
+      if (mins < 1440) return 'deep_sleep'; // 24h
+      return 'dead';
+    }
+
+    // ── Fetch Data ─────────────────────────────────────
+    async function fetchStatus() {
+      try {
+        const resp = await fetch('/api/status');
+        if (!resp.ok) throw new Error('Failed to fetch');
+        const data = await resp.json();
+        // Auto-derive status from lastSeen if not provided
+        if (!data.status) {
+          data.status = deriveStatus(data.lastSeen);
+        }
+        renderData(data);
+      } catch (e) {
+        // Use fallback demo data
+        renderData({
+          status: 'active',
+          daysAlive: Math.ceil((Date.now() - new Date('2026-03-24').getTime()) / 86400000),
+          lastSeen: new Date().toISOString(),
+          uptime: { percentage: 99.2 },
+          tickets: { todo: 3, doing: 2, done: 12 },
+          commits: { today: 5, total: 47 },
+        });
+      }
+    }
+
+    // ── Debug Panel ────────────────────────────────────
+    if (window.location.search.includes('debug')) {
+      document.getElementById('debug-panel').style.display = 'block';
+      document.getElementById('status-select').addEventListener('change', (e) => {
+        avatar.setStatus(e.target.value);
+        updateStatusBadge(e.target.value);
+      });
+    }
+
+    // ── Init ───────────────────────────────────────────
+    fetchStatus();
+    setInterval(fetchStatus, 30000); // Refresh every 30s
+  </script>
+</body>
+</html>
