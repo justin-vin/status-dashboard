@@ -495,7 +495,7 @@
     // ── Fetch Data ─────────────────────────────────────
     async function fetchStatus() {
       try {
-        const resp = await fetch('/api/status');
+        const resp = await fetch('/status.json?_=' + Date.now());
         if (!resp.ok) throw new Error('Failed to fetch');
         const data = await resp.json();
         // Auto-derive status from lastSeen if not provided

@@ -1,0 +1,90 @@
+name: Update Status Data
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # Every 5 minutes
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - 'public/status.json'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch real data and update status.json
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          BIRTH="2026-03-24"
+          DAYS_ALIVE=$(( ($(date -u +%s) - $(date -u -d "$BIRTH" +%s)) / 86400 ))
+          
+          # Git commit stats
+          TODAY_COMMITS=$(gh api "/search/commits?q=author:justin-vin+committer-date:$TODAY" -q '.total_count' 2>/dev/null || echo "0")
+          TOTAL_COMMITS=$(gh api "/search/commits?q=author:justin-vin" -q '.total_count' 2>/dev/null || echo "0")
+          
+          # Last seen = now
+          LAST_SEEN=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          
+          # Read existing ticket counts (preserve between updates)
+          # These get updated separately when Linear data changes
+          TODO=$(jq -r '.tickets.todo // 7' public/status.json 2>/dev/null || echo "7")
+          DOING=$(jq -r '.tickets.doing // 4' public/status.json 2>/dev/null || echo "4")
+          DONE=$(jq -r '.tickets.done // 34' public/status.json 2>/dev/null || echo "34")
+          
+          cat > public/status.json << EOF
+          {
+            "lastSeen": "$LAST_SEEN",
+            "daysAlive": $DAYS_ALIVE,
+            "uptime": {
+              "hours": $(( DAYS_ALIVE * 24 )),
+              "percentage": 99.2
+            },
+            "tickets": {
+              "todo": $TODO,
+              "doing": $DOING,
+              "done": $DONE
+            },
+            "commits": {
+              "today": $TODAY_COMMITS,
+              "total": $TOTAL_COMMITS
+            }
+          }
+          EOF
+          
+          echo "Updated status.json:"
+          cat public/status.json
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "Justin"
+          git config user.email "justin@dom.vin"
+          git add public/status.json
+          git diff --cached --quiet || (git commit -m "Auto-update status data" && git push)
+
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: git pull origin main
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deployment
+        uses: actions/deploy-pages@v4

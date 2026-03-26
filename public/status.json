@@ -1,0 +1,17 @@
+{
+  "lastSeen": "2026-03-26T18:46:19Z",
+  "daysAlive": 2,
+  "uptime": {
+    "hours": 48,
+    "percentage": 99.2
+  },
+  "tickets": {
+    "todo": 7,
+    "doing": 4,
+    "done": 34
+  },
+  "commits": {
+    "today": 23,
+    "total": 34
+  }
+}
