@@ -205,11 +205,12 @@ class AvatarAnimator {
 
     const pal = this._getPalette();
 
-    // Background rect (square with rounded corners)
+    // Background rect (fills entire SVG, CSS handles corner rounding)
     this.bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    this.bgCircle.setAttribute('x', '0');
+    this.bgCircle.setAttribute('y', '0');
     this.bgCircle.setAttribute('width', '64');
     this.bgCircle.setAttribute('height', '64');
-    this.bgCircle.setAttribute('rx', '12');
     this.bgCircle.setAttribute('fill', pal.bg);
     svg.appendChild(this.bgCircle);
 
