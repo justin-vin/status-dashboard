@@ -485,9 +485,9 @@
       if (!lastSeen) return 'active';
       const diff = Date.now() - new Date(lastSeen).getTime();
       const mins = diff / 60000;
-      if (mins < 2) return 'active';
-      if (mins < 5) return 'idle';
-      if (mins < 30) return 'sleeping';
+      if (mins < 10) return 'active';
+      if (mins < 30) return 'idle';
+      if (mins < 120) return 'sleeping';    // 2h
       if (mins < 1440) return 'deep_sleep'; // 24h
       return 'dead';
     }
