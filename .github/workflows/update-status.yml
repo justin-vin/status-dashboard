@@ -40,7 +40,7 @@ jobs:
           DOING=$(jq -r '.tickets.doing // 4' public/status.json 2>/dev/null || echo "4")
           DONE=$(jq -r '.tickets.done // 34' public/status.json 2>/dev/null || echo "34")
           DONE_DAILY=$(jq -c '.doneDaily // {}' public/status.json 2>/dev/null || echo '{}')
-          ACTIVE_TICKETS=$(jq -c '.activeTickets // []' public/status.json 2>/dev/null || echo '[]')
+          ACTIVE_SESSIONS=$(jq -r '.activeSessions // 0' public/status.json 2>/dev/null || echo "0")
           
           # Update only lastSeen, daysAlive, uptime, commits — preserve everything else
           jq --arg ls "$LAST_SEEN" \
@@ -51,7 +51,7 @@ jobs:
              --argjson doing "$DOING" \
              --argjson done "$DONE" \
              --argjson dd "$DONE_DAILY" \
-             --argjson at "$ACTIVE_TICKETS" \
+             --argjson as "$ACTIVE_SESSIONS" \
              -n '{
                lastSeen: $ls,
                daysAlive: $da,
@@ -59,7 +59,7 @@ jobs:
                tickets: { todo: $todo, doing: $doing, done: $done },
                commits: { today: $tc, total: $ttc },
                doneDaily: $dd,
-               activeTickets: $at
+               activeSessions: $as
              }' > public/status.json
           
           echo "Updated status.json:"
