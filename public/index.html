@@ -645,7 +645,15 @@
     // ── Fetch Data ─────────────────────────────────────
     async function fetchStatus() {
       try {
-        const resp = await fetch('/status.json?_=' + Date.now());
+        // Try live endpoint first, fall back to cached status.json
+        let resp;
+        try {
+          resp = await fetch('https://hooks.justin.vin/plugins/status-api/status');
+          if (!resp.ok) throw new Error('Live endpoint failed');
+        } catch (e) {
+          // Live endpoint down — try cached
+          resp = await fetch('/status.json?_=' + Date.now());
+        }
         if (!resp.ok) throw new Error('Failed to fetch');
         const data = await resp.json();
         // Auto-derive status from lastSeen if not provided
@@ -654,14 +662,15 @@
         }
         renderData(data);
       } catch (e) {
-        // Use fallback demo data
+        // Bridge is down — show dead state
         renderData({
-          status: 'active',
+          status: 'dead',
           daysAlive: Math.ceil((Date.now() - new Date('2026-03-24').getTime()) / 86400000),
-          lastSeen: new Date().toISOString(),
-          uptime: { percentage: 99.2 },
-          tickets: { todo: 3, doing: 2, done: 12 },
-          commits: { today: 5, total: 47 },
+          lastSeen: null,
+          uptime: { percentage: 0 },
+          tickets: { todo: 0, doing: 0, done: 0 },
+          commits: { today: 0, total: 0 },
+          activeSessions: 0,
         });
       }
     }
