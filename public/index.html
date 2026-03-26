@@ -137,6 +137,54 @@
     .status-error .status-dot { background: var(--red); }
     .status-error { background: #EF444418; color: var(--red); }
 
+    /* Active tickets */
+    .active-tickets-card {
+      margin-top: 1.5rem;
+    }
+
+    .active-tickets-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .active-ticket {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 0.85rem;
+    }
+
+    .active-ticket + .active-ticket {
+      border-top: 1px solid var(--border);
+    }
+
+    .active-ticket-id {
+      font-family: 'JetBrains Mono', 'SF Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .active-ticket-title {
+      color: var(--text);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .active-ticket-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
     /* Stats grid */
     .stats-grid {
       display: grid;
@@ -406,6 +454,13 @@
       </div>
     </div>
 
+    <div class="active-tickets-card" id="active-tickets-card" style="display:none">
+      <div class="ticket-bar">
+        <div class="ticket-bar-label">Currently Working On</div>
+        <div class="active-tickets-list" id="active-tickets-list"></div>
+      </div>
+    </div>
+
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-value" id="days-alive">—</div>
@@ -516,6 +571,23 @@
       const status = data.status || 'active';
       avatar.setStatus(status);
       updateStatusBadge(status);
+
+      // Active tickets
+      const activeTickets = data.activeTickets || [];
+      const activeCard = document.getElementById('active-tickets-card');
+      const activeList = document.getElementById('active-tickets-list');
+      if (activeTickets.length > 0) {
+        activeCard.style.display = 'block';
+        activeList.innerHTML = activeTickets.map(t => 
+          `<div class="active-ticket">
+            <div class="active-ticket-dot"></div>
+            <span class="active-ticket-id">${t.id}</span>
+            <span class="active-ticket-title">${t.title}</span>
+          </div>`
+        ).join('');
+      } else {
+        activeCard.style.display = 'none';
+      }
 
       // Stats
       document.getElementById('days-alive').textContent = data.daysAlive ?? '—';
