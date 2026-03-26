@@ -504,12 +504,15 @@ class AvatarAnimator {
     let bodyY = 0;
     const ep = getEmotionParams(this.status);
     if (!ep.dead && !ep.sleeping) {
-      // Subtle lateral sway
-      bodyX = Math.sin(t * 0.4) * 0.6 * (ep.restlessness || 0);
-      // Occasional micro-hop
-      const hopPhase = Math.sin(t * 1.7) * Math.sin(t * 0.3);
-      if (hopPhase > 0.85) {
-        bodyY = -1.5 * (hopPhase - 0.85) * 6.67 * (ep.restlessness || 0);
+      // Gentle lateral sway — always visible
+      bodyX = Math.sin(t * 0.5) * 2.0 * (ep.restlessness || 0.5);
+      // Breathing bounce
+      bodyY = Math.sin(t * 0.8) * 1.0;
+      // Occasional bigger hop — triggers every ~5-8 seconds
+      const hopPhase = Math.sin(t * 0.7) * Math.sin(t * 0.23);
+      if (hopPhase > 0.6) {
+        const hopAmount = (hopPhase - 0.6) * 2.5; // 0 to 1
+        bodyY += -4.0 * hopAmount * (ep.restlessness || 0.5);
       }
     }
     // Apply bounce to the CSS wrapper (the whole colored square)
