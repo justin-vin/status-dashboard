@@ -179,21 +179,29 @@ class AvatarAnimator {
       const rect = this.svg.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      // Normalize to -1..1, clamped
-      this.mouse.x = Math.max(-1, Math.min(1, (e.clientX - cx) / (rect.width * 1.5)));
-      this.mouse.y = Math.max(-1, Math.min(1, (e.clientY - cy) / (rect.height * 1.5)));
+      // Normalize to -1..1, clamped — wider range for more dramatic tracking
+      this.mouse.x = Math.max(-1, Math.min(1, (e.clientX - cx) / (rect.width * 0.8)));
+      this.mouse.y = Math.max(-1, Math.min(1, (e.clientY - cy) / (rect.height * 0.8)));
       
       const now = performance.now();
-      const wasIdle = (now - this.mouse.lastMoveTime) > 3000;
+      this.mouse.isMoving = true;
       this.mouse.lastMoveTime = now;
       
+      // Clear the "stopped moving" timer
+      clearTimeout(this.mouse._stopTimer);
+      this.mouse._stopTimer = setTimeout(() => {
+        this.mouse.isMoving = false;
+      }, 200); // Consider mouse stopped after 200ms of no movement
+      
       // If mouse was idle for a while and we're not on cooldown, maybe get distracted
+      const wasIdle = (now - (this.mouse.prevMoveTime || 0)) > 4000;
+      this.mouse.prevMoveTime = this.mouse.lastMoveTime;
+      
       if (wasIdle && !this.mouse.tracking && now > this.mouse.cooldownUntil) {
-        // Random chance to notice (60%)
         if (this.rng() < 0.6) {
           this.mouse.tracking = true;
           this.mouse.trackStart = now;
-          this.mouse.trackDuration = 2000 + this.rng() * 3000; // 2-5 seconds
+          this.mouse.trackDuration = 2500 + this.rng() * 3500; // 2.5-6 seconds
         }
       }
     };
@@ -491,20 +499,26 @@ class AvatarAnimator {
 
     const fg = this._getPalette().fg;
 
-    // Body animation: breathing + subtle bounce/sway when active
+    // Body animation: breathing moves face group, bounce/sway moves the whole wrapper
     let bodyX = 0;
-    let bodyY = this.currentState.breathY;
+    let bodyY = 0;
     const ep = getEmotionParams(this.status);
     if (!ep.dead && !ep.sleeping) {
       // Subtle lateral sway
-      bodyX = Math.sin(t * 0.4) * 0.3 * (ep.restlessness || 0);
+      bodyX = Math.sin(t * 0.4) * 0.6 * (ep.restlessness || 0);
       // Occasional micro-hop
       const hopPhase = Math.sin(t * 1.7) * Math.sin(t * 0.3);
       if (hopPhase > 0.85) {
-        bodyY += -0.4 * (hopPhase - 0.85) * 6.67 * (ep.restlessness || 0);
+        bodyY = -1.5 * (hopPhase - 0.85) * 6.67 * (ep.restlessness || 0);
       }
     }
-    this.faceGroup.setAttribute('transform', `translate(${bodyX},${bodyY})`);
+    // Apply bounce to the CSS wrapper (the whole colored square)
+    const wrapper = this.svg.parentElement;
+    if (wrapper) {
+      wrapper.style.transform = `translate(${bodyX}px, ${bodyY}px)`;
+    }
+    // Face group only gets breathing
+    this.faceGroup.setAttribute('transform', `translate(0,${this.currentState.breathY})`);
     this._renderEyes(this.currentState, fg);
     this._renderBrows(this.currentState, fg);
     this._renderZs(elapsed);
@@ -514,25 +528,28 @@ class AvatarAnimator {
     // Breathing
     const breathY = Math.sin(t / params.breathSpeed * Math.PI * 2) * 0.8;
 
-    // Gaze
-    if (elapsed > this.gaze.nextShift && elapsed > this.gaze.holdUntil) {
+    // Gaze — intentional movements, hold longer, less jitter
+    if (!this.mouse.tracking && elapsed > this.gaze.nextShift && elapsed > this.gaze.holdUntil) {
       const r = this.rng();
-      if (r < 0.3) {
-        this.gaze.targetX = (this.rng() - 0.5) * 1.6 * params.restlessness;
-        this.gaze.targetY = (this.rng() - 0.5) * 1.0 * params.restlessness;
-        this.gaze.holdUntil = elapsed + 400 + this.rng() * 1500;
+      if (r < 0.25) {
+        // Look somewhere specific
+        this.gaze.targetX = (this.rng() - 0.5) * 1.4 * params.restlessness;
+        this.gaze.targetY = (this.rng() - 0.5) * 0.8 * params.restlessness;
+        this.gaze.holdUntil = elapsed + 1000 + this.rng() * 2500;
       } else if (r < 0.5) {
-        this.gaze.targetX = (this.rng() - 0.5) * 0.3;
-        this.gaze.targetY = (this.rng() - 0.5) * 0.2;
-        this.gaze.holdUntil = elapsed + 800 + this.rng() * 2000;
+        // Return to center-ish
+        this.gaze.targetX = (this.rng() - 0.5) * 0.2;
+        this.gaze.targetY = (this.rng() - 0.5) * 0.15;
+        this.gaze.holdUntil = elapsed + 1500 + this.rng() * 3000;
       } else {
-        this.gaze.targetX += (this.rng() - 0.5) * 0.4 * params.restlessness;
-        this.gaze.targetY += (this.rng() - 0.5) * 0.3 * params.restlessness;
+        // Small drift from current position
+        this.gaze.targetX += (this.rng() - 0.5) * 0.3 * params.restlessness;
+        this.gaze.targetY += (this.rng() - 0.5) * 0.2 * params.restlessness;
         this.gaze.targetX = Math.max(-0.9, Math.min(0.9, this.gaze.targetX));
         this.gaze.targetY = Math.max(-0.7, Math.min(0.7, this.gaze.targetY));
-        this.gaze.holdUntil = elapsed + 300 + this.rng() * 800;
+        this.gaze.holdUntil = elapsed + 800 + this.rng() * 1500;
       }
-      this.gaze.nextShift = this.gaze.holdUntil + this.rng() * 600;
+      this.gaze.nextShift = this.gaze.holdUntil + this.rng() * 1200;
     }
 
     // Mouse tracking override
@@ -543,10 +560,16 @@ class AvatarAnimator {
     if (this.mouse.tracking) {
       const trackElapsed = elapsed - this.mouse.trackStart;
       if (trackElapsed < this.mouse.trackDuration) {
-        // Follow the mouse — ease into it
-        const trackEase = Math.min(1, trackElapsed / 400); // ramp up over 400ms
-        mouseOverrideX = this.mouse.x * 0.9 * trackEase;
-        mouseOverrideY = this.mouse.y * 0.7 * trackEase;
+        // Only follow when mouse is actively moving — otherwise hold last position
+        if (this.mouse.isMoving) {
+          const trackEase = Math.min(1, trackElapsed / 300); // ramp up over 300ms
+          mouseOverrideX = this.mouse.x * 1.4 * trackEase;  // much wider drift
+          mouseOverrideY = this.mouse.y * 1.0 * trackEase;
+        } else {
+          // Mouse stopped — hold current gaze, don't snap back yet
+          mouseOverrideX = this.gaze.currentX;
+          mouseOverrideY = this.gaze.currentY;
+        }
       } else {
         // Time's up — snap out of it with a head shake
         this.mouse.tracking = false;
@@ -583,8 +606,10 @@ class AvatarAnimator {
       this.gaze.currentY = lerp(this.gaze.currentY, this.gaze.targetY, gazeEase);
     }
 
-    const saccadeX = noise(t * 8, this.seed) * 0.06 * params.restlessness;
-    const saccadeY = noise(t * 7.3, this.seed + 100) * 0.04 * params.restlessness;
+    // Reduce saccade noise — only when not mouse-tracking, and softer overall
+    const saccadeScale = (mouseOverrideX !== null) ? 0 : 1;
+    const saccadeX = noise(t * 5, this.seed) * 0.03 * params.restlessness * saccadeScale;
+    const saccadeY = noise(t * 4.5, this.seed + 100) * 0.02 * params.restlessness * saccadeScale;
 
     const gazeX = this.gaze.currentX + saccadeX + headShakeOffset;
     const gazeY = this.gaze.currentY + saccadeY - breathY * 0.12;
