@@ -1,5 +1,5 @@
 {
-  "lastSeen": "2026-03-26T19:40:02Z",
+  "lastSeen": "2026-03-26T20:04:22Z",
   "daysAlive": 2,
   "uptime": {
     "hours": 48,
@@ -11,9 +11,9 @@
     "done": 34
   },
   "commits": {
-    "today": 37,
-    "total": 38
+    "today": 41,
+    "total": 42
   },
   "doneDaily": {},
-  "activeTickets": []
+  "activeSessions": 0
 }
