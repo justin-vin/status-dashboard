@@ -161,6 +161,44 @@ class AvatarAnimator {
     // Sleeping Z's
     this.zParticles = [];
 
+    // Mouse tracking / distraction system
+    this.mouse = {
+      x: 0, y: 0,           // normalized -1 to 1 relative to avatar center
+      lastMoveTime: 0,       // when mouse last moved
+      idleSince: 0,          // when mouse went idle
+      tracking: false,       // currently following mouse?
+      trackStart: 0,         // when tracking started
+      trackDuration: 0,      // how long to track this time
+      cooldownUntil: 0,      // can't get distracted again until this time
+      headShake: 0,          // head shake animation progress (0 = none, >0 = shaking)
+      headShakeStart: 0,
+    };
+
+    // Mouse event listener
+    this._onMouseMove = (e) => {
+      const rect = this.svg.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      // Normalize to -1..1, clamped
+      this.mouse.x = Math.max(-1, Math.min(1, (e.clientX - cx) / (rect.width * 1.5)));
+      this.mouse.y = Math.max(-1, Math.min(1, (e.clientY - cy) / (rect.height * 1.5)));
+      
+      const now = performance.now();
+      const wasIdle = (now - this.mouse.lastMoveTime) > 3000;
+      this.mouse.lastMoveTime = now;
+      
+      // If mouse was idle for a while and we're not on cooldown, maybe get distracted
+      if (wasIdle && !this.mouse.tracking && now > this.mouse.cooldownUntil) {
+        // Random chance to notice (60%)
+        if (this.rng() < 0.6) {
+          this.mouse.tracking = true;
+          this.mouse.trackStart = now;
+          this.mouse.trackDuration = 2000 + this.rng() * 3000; // 2-5 seconds
+        }
+      }
+    };
+    document.addEventListener('mousemove', this._onMouseMove);
+
     // Listen for scheme changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       this.isDark = e.matches;
@@ -497,14 +535,58 @@ class AvatarAnimator {
       this.gaze.nextShift = this.gaze.holdUntil + this.rng() * 600;
     }
 
+    // Mouse tracking override
+    let mouseOverrideX = null;
+    let mouseOverrideY = null;
+    let headShakeOffset = 0;
+    
+    if (this.mouse.tracking) {
+      const trackElapsed = elapsed - this.mouse.trackStart;
+      if (trackElapsed < this.mouse.trackDuration) {
+        // Follow the mouse — ease into it
+        const trackEase = Math.min(1, trackElapsed / 400); // ramp up over 400ms
+        mouseOverrideX = this.mouse.x * 0.9 * trackEase;
+        mouseOverrideY = this.mouse.y * 0.7 * trackEase;
+      } else {
+        // Time's up — snap out of it with a head shake
+        this.mouse.tracking = false;
+        this.mouse.headShake = 0.01;
+        this.mouse.headShakeStart = elapsed;
+        this.mouse.cooldownUntil = elapsed + 5000 + this.rng() * 10000; // 5-15s cooldown
+        // Force a blink when snapping out
+        this.blink.blinkPhase = 0.01;
+        this.blink.isDouble = false;
+      }
+    }
+    
+    // Head shake animation (after snapping out of tracking)
+    if (this.mouse.headShake > 0) {
+      const shakeElapsed = elapsed - this.mouse.headShakeStart;
+      const shakeDuration = 500; // 500ms shake
+      if (shakeElapsed < shakeDuration) {
+        const shakeProgress = shakeElapsed / shakeDuration;
+        const decay = 1 - shakeProgress;
+        headShakeOffset = Math.sin(shakeProgress * Math.PI * 6) * decay * 1.2;
+      } else {
+        this.mouse.headShake = 0;
+      }
+    }
+
     const gazeEase = 0.04 + params.gazeSpeed * 0.06;
-    this.gaze.currentX = lerp(this.gaze.currentX, this.gaze.targetX, gazeEase);
-    this.gaze.currentY = lerp(this.gaze.currentY, this.gaze.targetY, gazeEase);
+    
+    if (mouseOverrideX !== null) {
+      // Smoothly follow mouse
+      this.gaze.currentX = lerp(this.gaze.currentX, mouseOverrideX, 0.08);
+      this.gaze.currentY = lerp(this.gaze.currentY, mouseOverrideY, 0.08);
+    } else {
+      this.gaze.currentX = lerp(this.gaze.currentX, this.gaze.targetX, gazeEase);
+      this.gaze.currentY = lerp(this.gaze.currentY, this.gaze.targetY, gazeEase);
+    }
 
     const saccadeX = noise(t * 8, this.seed) * 0.06 * params.restlessness;
     const saccadeY = noise(t * 7.3, this.seed + 100) * 0.04 * params.restlessness;
 
-    const gazeX = this.gaze.currentX + saccadeX;
+    const gazeX = this.gaze.currentX + saccadeX + headShakeOffset;
     const gazeY = this.gaze.currentY + saccadeY - breathY * 0.12;
 
     // Blinking
@@ -624,6 +706,7 @@ class AvatarAnimator {
 
   destroy() {
     if (this._rafId) cancelAnimationFrame(this._rafId);
+    if (this._onMouseMove) document.removeEventListener('mousemove', this._onMouseMove);
   }
 }
 
