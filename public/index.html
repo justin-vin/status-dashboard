@@ -223,6 +223,68 @@
       display: inline-block;
     }
 
+    /* Done chart */
+    .done-chart-section {
+      margin-top: 0.75rem;
+    }
+
+    .done-chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .done-chart-header .ticket-bar-label {
+      margin-bottom: 0;
+    }
+
+    .done-total {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--green);
+    }
+
+    .done-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 64px;
+    }
+
+    .done-bar-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .done-bar {
+      width: 100%;
+      background: var(--green);
+      border-radius: 3px 3px 0 0;
+      min-height: 2px;
+      transition: height 0.5s ease;
+      opacity: 0.8;
+    }
+
+    .done-bar:hover {
+      opacity: 1;
+    }
+
+    .done-bar-label {
+      font-size: 0.6rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .done-bar-count {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
     /* Activity section */
     .activity-section {
       margin-top: 0.75rem;
@@ -367,8 +429,17 @@
         <div class="ticket-legend">
           <span><span class="legend-dot" style="background: var(--yellow)"></span> To Do <b id="todo-count">0</b></span>
           <span><span class="legend-dot" style="background: var(--accent)"></span> Doing <b id="doing-count">0</b></span>
-          <span><span class="legend-dot" style="background: var(--green)"></span> Done <b id="done-count">0</b></span>
         </div>
+      </div>
+    </div>
+
+    <div class="done-chart-section">
+      <div class="ticket-bar">
+        <div class="done-chart-header">
+          <div class="ticket-bar-label">Tickets Done</div>
+          <div class="done-total" id="done-total">0 all time</div>
+        </div>
+        <div class="done-chart" id="done-chart"></div>
       </div>
     </div>
 
@@ -456,9 +527,29 @@
         segments[0].style.width = `${(tickets.todo / activeTotal) * 100}%`;
         segments[1].style.width = `${(tickets.doing / activeTotal) * 100}%`;
       }
-      document.getElementById('done-count').textContent = tickets.done || 0;
       document.getElementById('doing-count').textContent = tickets.doing || 0;
       document.getElementById('todo-count').textContent = tickets.todo || 0;
+
+      // Done chart
+      const doneDaily = data.doneDaily || {};
+      const doneTotal = Object.values(doneDaily).reduce((a, b) => a + b, 0) || tickets.done || 0;
+      document.getElementById('done-total').textContent = `${doneTotal} all time`;
+      
+      const chartEl = document.getElementById('done-chart');
+      const days = Object.keys(doneDaily).sort();
+      if (days.length > 0) {
+        const maxDone = Math.max(...Object.values(doneDaily), 1);
+        chartEl.innerHTML = days.map(day => {
+          const count = doneDaily[day];
+          const height = Math.max(2, (count / maxDone) * 52);
+          const label = new Date(day + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          return `<div class="done-bar-group">
+            <div class="done-bar-count">${count}</div>
+            <div class="done-bar" style="height: ${height}px" title="${label}: ${count} done"></div>
+            <div class="done-bar-label">${label}</div>
+          </div>`;
+        }).join('');
+      }
 
       // Activity
       if (data.lastSeen) {
