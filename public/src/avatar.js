@@ -207,6 +207,17 @@ class AvatarAnimator {
     };
     document.addEventListener('mousemove', this._onMouseMove);
 
+    // Click interaction — surprise + happy reaction
+    this.clickReaction = { active: false, startTime: 0 };
+    this._onClick = () => {
+      if (this.clickReaction.active) return;
+      this.clickReaction.active = true;
+      this.clickReaction.startTime = performance.now();
+    };
+    // Attach to bounce container or wrapper
+    const clickTarget = document.getElementById('avatar-bounce') || this.svg.parentElement;
+    if (clickTarget) clickTarget.addEventListener('click', this._onClick);
+
     // Listen for scheme changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       this.isDark = e.matches;
@@ -515,10 +526,19 @@ class AvatarAnimator {
         bodyY += -4.0 * hopAmount * (ep.restlessness || 0.5);
       }
     }
-    // Apply bounce to the CSS wrapper (the whole colored square)
-    const wrapper = this.svg.parentElement;
-    if (wrapper) {
-      wrapper.style.transform = `translate(${bodyX}px, ${bodyY}px)`;
+    // Click jump
+    if (this.clickReaction.active) {
+      const clickElapsed = elapsed - this.clickReaction.startTime;
+      if (clickElapsed < 400) {
+        const jumpPhase = clickElapsed / 400;
+        bodyY += -8 * Math.sin(jumpPhase * Math.PI); // 8px jump arc
+      }
+    }
+
+    // Apply bounce to the outer bounce container (moves the whole square)
+    const bounceEl = document.getElementById('avatar-bounce');
+    if (bounceEl) {
+      bounceEl.style.transform = `translate(${bodyX}px, ${bodyY}px)`;
     }
     // Face group only gets breathing
     this.faceGroup.setAttribute('transform', `translate(0,${this.currentState.breathY})`);
@@ -563,15 +583,26 @@ class AvatarAnimator {
     if (this.mouse.tracking) {
       const trackElapsed = elapsed - this.mouse.trackStart;
       if (trackElapsed < this.mouse.trackDuration) {
-        // Only follow when mouse is actively moving — otherwise hold last position
+        // ONLY follow when mouse is actively moving — freeze when still
         if (this.mouse.isMoving) {
-          const trackEase = Math.min(1, trackElapsed / 300); // ramp up over 300ms
-          mouseOverrideX = this.mouse.x * 1.4 * trackEase;  // much wider drift
-          mouseOverrideY = this.mouse.y * 1.0 * trackEase;
-        } else {
-          // Mouse stopped — hold current gaze, don't snap back yet
-          mouseOverrideX = this.gaze.currentX;
-          mouseOverrideY = this.gaze.currentY;
+          const trackEase = Math.min(1, trackElapsed / 300);
+          this.mouse.lastTrackX = this.mouse.x * 1.4 * trackEase;
+          this.mouse.lastTrackY = this.mouse.y * 1.0 * trackEase;
+        }
+        // When still, return gaze to center (not tracking)
+        if (this.mouse.isMoving) {
+          mouseOverrideX = this.mouse.lastTrackX || 0;
+          mouseOverrideY = this.mouse.lastTrackY || 0;
+        }
+        // If mouse has been still for >500ms during tracking, end tracking early
+        if (!this.mouse.isMoving && (elapsed - this.mouse.lastMoveTime) > 500) {
+          // Snap out early
+          this.mouse.tracking = false;
+          this.mouse.headShake = 0.01;
+          this.mouse.headShakeStart = elapsed;
+          this.mouse.cooldownUntil = elapsed + 5000 + this.rng() * 10000;
+          this.blink.blinkPhase = 0.01;
+          this.blink.isDouble = false;
         }
       } else {
         // Time's up — snap out of it with a head shake
@@ -704,12 +735,41 @@ class AvatarAnimator {
       this.event.nextEvent = elapsed + 3000 + this.rng() * 8000;
     }
 
+    // Click reaction override
+    let clickLid = 0, clickBrow = 0, clickSquint = 0;
+    if (this.clickReaction.active) {
+      const clickElapsed = elapsed - this.clickReaction.startTime;
+      if (clickElapsed < 1800) {
+        const phase = clickElapsed / 1800;
+        if (phase < 0.15) {
+          // Surprise — eyes wide, brows up
+          const surge = smoothstep(phase / 0.15);
+          clickBrow = surge * 1.2;
+          clickLid = -surge * 0.3; // negative = wider
+        } else if (phase < 0.4) {
+          // Hold surprise
+          clickBrow = 1.2 * (1 - (phase - 0.15) / 0.25 * 0.5);
+        } else if (phase < 0.7) {
+          // Happy squint
+          const happy = smoothstep((phase - 0.4) / 0.3);
+          clickSquint = happy * 0.5;
+          clickBrow = 0.3 * (1 - happy);
+        } else {
+          // Fade back to normal
+          const fade = (phase - 0.7) / 0.3;
+          clickSquint = 0.5 * (1 - fade);
+        }
+      } else {
+        this.clickReaction.active = false;
+      }
+    }
+
     this.currentState = {
       gazeX, gazeY,
-      lidClose: Math.max(0, Math.min(1, lidClose + eventLid)),
-      browRaise: this.expr.currentBrow + eventBrow,
+      lidClose: Math.max(0, Math.min(1, lidClose + eventLid + clickLid)),
+      browRaise: this.expr.currentBrow + eventBrow + clickBrow,
       browTilt: this.expr.currentBrowTilt + eventBrowTilt,
-      squint: Math.max(0, this.expr.currentSquint + eventSquint),
+      squint: Math.max(0, this.expr.currentSquint + eventSquint + clickSquint),
       breathY,
     };
   }

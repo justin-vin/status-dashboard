@@ -61,6 +61,11 @@
       padding: 2rem 0 1.5rem;
     }
 
+    .avatar-bounce {
+      display: inline-block;
+      cursor: pointer;
+    }
+
     .avatar-wrapper {
       width: 240px;
       height: 240px;
@@ -68,12 +73,11 @@
       overflow: hidden;
       background: transparent;
       box-shadow: 0 4px 24px rgba(70, 130, 180, 0.2);
-      transition: box-shadow 0.3s ease, transform 0.3s ease;
+      transition: box-shadow 0.3s ease;
     }
 
     .avatar-wrapper:hover {
       box-shadow: 0 6px 32px rgba(70, 130, 180, 0.35);
-      transform: scale(1.02);
     }
 
     .avatar-wrapper svg {
@@ -389,8 +393,10 @@
 <body>
   <div class="container">
     <div class="avatar-section">
-      <div class="avatar-wrapper">
-        <svg id="avatar"></svg>
+      <div class="avatar-bounce" id="avatar-bounce">
+        <div class="avatar-wrapper">
+          <svg id="avatar"></svg>
+        </div>
       </div>
       <div class="name">Justin</div>
       <div class="tagline">Autonomous AI Agent • Chief of Staff</div>
