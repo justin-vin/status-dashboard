@@ -205,11 +205,11 @@ class AvatarAnimator {
 
     const pal = this._getPalette();
 
-    // Background circle
-    this.bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    this.bgCircle.setAttribute('cx', '32');
-    this.bgCircle.setAttribute('cy', '32');
-    this.bgCircle.setAttribute('r', '32');
+    // Background rect (square with rounded corners)
+    this.bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    this.bgCircle.setAttribute('width', '64');
+    this.bgCircle.setAttribute('height', '64');
+    this.bgCircle.setAttribute('rx', '12');
     this.bgCircle.setAttribute('fill', pal.bg);
     svg.appendChild(this.bgCircle);
 
@@ -267,24 +267,25 @@ class AvatarAnimator {
       return;
     }
 
-    // Dot eyes
+    // Dot eyes — amplified gaze for visible "looking around"
     const r = 2.2 * yScale;
     this.leftEyeGroup.innerHTML = '';
     this.rightEyeGroup.innerHTML = '';
 
+    const gazeAmplify = 1.8; // Make gaze movement more visible
     const leftEye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     leftEye.setAttribute('r', String(r));
     leftEye.setAttribute('fill', fg);
-    leftEye.setAttribute('cx', String(gazeX * 0.5));
-    leftEye.setAttribute('cy', String(gazeY * 0.5 * yScale));
+    leftEye.setAttribute('cx', String(gazeX * gazeAmplify));
+    leftEye.setAttribute('cy', String(gazeY * gazeAmplify * yScale));
     this.leftEyeGroup.setAttribute('transform', `translate(${leftX},${centerY}) scale(${size})`);
     this.leftEyeGroup.appendChild(leftEye);
 
     const rightEye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     rightEye.setAttribute('r', String(r));
     rightEye.setAttribute('fill', fg);
-    rightEye.setAttribute('cx', String(gazeX * 0.5));
-    rightEye.setAttribute('cy', String(gazeY * 0.5 * yScale));
+    rightEye.setAttribute('cx', String(gazeX * gazeAmplify));
+    rightEye.setAttribute('cy', String(gazeY * gazeAmplify * yScale));
     this.rightEyeGroup.setAttribute('transform', `translate(${rightX},${centerY}) scale(${size})`);
     this.rightEyeGroup.appendChild(rightEye);
   }
@@ -450,7 +451,21 @@ class AvatarAnimator {
     }
 
     const fg = this._getPalette().fg;
-    this.faceGroup.setAttribute('transform', `translate(0,${this.currentState.breathY})`);
+
+    // Body animation: breathing + subtle bounce/sway when active
+    let bodyX = 0;
+    let bodyY = this.currentState.breathY;
+    const ep = getEmotionParams(this.status);
+    if (!ep.dead && !ep.sleeping) {
+      // Subtle lateral sway
+      bodyX = Math.sin(t * 0.4) * 0.3 * (ep.restlessness || 0);
+      // Occasional micro-hop
+      const hopPhase = Math.sin(t * 1.7) * Math.sin(t * 0.3);
+      if (hopPhase > 0.85) {
+        bodyY += -0.4 * (hopPhase - 0.85) * 6.67 * (ep.restlessness || 0);
+      }
+    }
+    this.faceGroup.setAttribute('transform', `translate(${bodyX},${bodyY})`);
     this._renderEyes(this.currentState, fg);
     this._renderBrows(this.currentState, fg);
     this._renderZs(elapsed);
