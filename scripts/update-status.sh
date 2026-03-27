@@ -25,25 +25,33 @@ DONE_COUNT="${DONE_COUNT:-34}"
 # Last seen = now (this script running means I'm alive)
 LAST_SEEN=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-cat > "$OUTPUT" << EOF
-{
-  "lastSeen": "$LAST_SEEN",
-  "daysAlive": $DAYS_ALIVE,
-  "uptime": {
-    "hours": $(( DAYS_ALIVE * 24 )),
-    "percentage": 99.2
-  },
-  "tickets": {
-    "todo": $TODO_COUNT,
-    "doing": $DOING_COUNT,
-    "done": $DONE_COUNT
-  },
-  "commits": {
-    "today": $TODAY_COMMITS,
-    "total": $TOTAL_COMMITS
-  }
-}
-EOF
+# Preserve existing doneDaily history
+if [ -f "$OUTPUT" ]; then
+  DONE_DAILY=$(jq -r '.doneDaily // {}' "$OUTPUT")
+else
+  DONE_DAILY='{}'
+fi
+
+# Build the JSON, merging in preserved doneDaily
+jq -n \
+  --arg lastSeen "$LAST_SEEN" \
+  --argjson daysAlive "$DAYS_ALIVE" \
+  --argjson hours "$(( DAYS_ALIVE * 24 ))" \
+  --argjson todo "$TODO_COUNT" \
+  --argjson doing "$DOING_COUNT" \
+  --argjson done "$DONE_COUNT" \
+  --argjson todayCommits "$TODAY_COMMITS" \
+  --argjson totalCommits "$TOTAL_COMMITS" \
+  --argjson doneDaily "$DONE_DAILY" \
+  '{
+    lastSeen: $lastSeen,
+    daysAlive: $daysAlive,
+    uptime: { hours: $hours, percentage: 99.2 },
+    tickets: { todo: $todo, doing: $doing, done: $done },
+    commits: { today: $todayCommits, total: $totalCommits },
+    doneDaily: $doneDaily,
+    activeSessions: 0
+  }' > "$OUTPUT"
 
 echo "Status updated: $OUTPUT"
 cat "$OUTPUT"

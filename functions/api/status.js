@@ -36,6 +36,7 @@ export async function onRequest(context) {
       today: 5,
       total: 47,
     },
+    doneDaily: {},
   };
 
   return new Response(JSON.stringify(data), { headers });
