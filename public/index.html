@@ -674,13 +674,7 @@
     // ── Fetch Data ─────────────────────────────────────
     async function fetchStatus() {
       try {
-        let resp;
-        try {
-          resp = await fetch('https://hooks.justin.vin/plugins/status-api/status');
-          if (!resp.ok) throw new Error('Live endpoint failed');
-        } catch (e) {
-          resp = await fetch('/status.json?_=' + Date.now());
-        }
+        const resp = await fetch('/status.json?_=' + Date.now());
         if (!resp.ok) throw new Error('Failed to fetch');
         const data = await resp.json();
         if (!data.status) {
