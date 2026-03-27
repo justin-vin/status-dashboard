@@ -7,65 +7,78 @@
   <meta name="description" content="Live status dashboard for Justin, an autonomous AI agent.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0F172A;
-      --surface: #1E293B;
-      --text: #F1F5F9;
-      --text-secondary: #94A3B8;
-      --border: #334155;
-      --accent: #5B9BD5;
-      --accent-dim: #5B9BD520;
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --text: #f0f0f0;
+      --text-secondary: #777;
+      --border: #222;
+      --accent: #c8ff00;
+      --accent-dim: #c8ff0018;
       --green: #22C55E;
       --yellow: #EAB308;
       --red: #EF4444;
-      --grey: #94A3B8;
+      --grey: #666;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
     body {
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Space Grotesk', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+    }
+
+    /* ── Split Layout ─────────────────────────────── */
+    .split {
+      display: flex;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    .panel-avatar {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel-status {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 2rem 1rem;
+      justify-content: center;
+      padding: 3rem;
+      overflow-y: auto;
     }
 
-    .container {
-      max-width: 480px;
-      width: 100%;
-    }
-
-    /* Avatar section */
-    .avatar-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem 0 1.5rem;
-    }
-
+    /* ── Avatar ───────────────────────────────────── */
     .avatar-bounce {
       display: inline-block;
       cursor: pointer;
     }
 
     .avatar-wrapper {
-      width: 240px;
-      height: 240px;
-      border-radius: 12px;
+      width: min(70vw, 70vh, 480px);
+      height: min(70vw, 70vh, 480px);
+      border-radius: 16px;
       overflow: hidden;
       background: transparent;
-      box-shadow: 0 4px 24px rgba(70, 130, 180, 0.2);
       transition: box-shadow 0.3s ease;
     }
 
     .avatar-wrapper:hover {
-      box-shadow: 0 6px 32px rgba(70, 130, 180, 0.35);
+      box-shadow: 0 0 60px rgba(200, 255, 0, 0.08);
     }
 
     .avatar-wrapper svg {
@@ -74,50 +87,57 @@
       display: block;
     }
 
+    /* ── Status Content ───────────────────────────── */
+    .status-content {
+      max-width: 420px;
+    }
+
     .name {
-      font-size: 1.5rem;
+      font-size: 2.5rem;
       font-weight: 700;
-      margin-top: 1rem;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.03em;
+      line-height: 1;
     }
 
     .tagline {
       color: var(--text-secondary);
       font-size: 0.875rem;
-      margin-top: 0.25rem;
+      margin-top: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .status-badge {
       display: inline-flex;
       align-items: center;
       gap: 0.375rem;
-      margin-top: 0.75rem;
-      padding: 0.25rem 0.75rem;
+      margin-top: 1rem;
+      padding: 0.3rem 0.85rem;
       border-radius: 9999px;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       animation: pulse 2s ease-in-out infinite;
     }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      50% { opacity: 0.4; }
     }
 
-    .status-active .status-dot { background: var(--green); }
-    .status-active { background: #22C55E18; color: var(--green); }
+    .status-active .status-dot { background: var(--accent); }
+    .status-active { background: var(--accent-dim); color: var(--accent); }
     .status-idle .status-dot { background: var(--yellow); }
     .status-idle { background: #EAB30818; color: var(--yellow); }
     .status-sleeping .status-dot { background: var(--grey); animation: none; }
-    .status-sleeping { background: #94A3B818; color: var(--grey); }
+    .status-sleeping { background: #66666618; color: var(--grey); }
     .status-dead .status-dot { background: var(--red); animation: none; }
     .status-dead { background: #EF444418; color: var(--red); }
     .status-working .status-dot { background: var(--accent); }
@@ -125,20 +145,21 @@
     .status-error .status-dot { background: var(--red); }
     .status-error { background: #EF444418; color: var(--red); }
 
-    /* Active now */
-    .active-now-card {
-      margin-top: 1.5rem;
-    }
-
-    .active-now-content {
+    /* ── Active Sessions ──────────────────────────── */
+    .active-now {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      margin-top: 1.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
     }
 
     .active-now-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: var(--green);
       animation: pulse 2s ease-in-out infinite;
@@ -146,19 +167,19 @@
     }
 
     .active-now-label {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-secondary);
-      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .active-now-count {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: var(--text);
       margin-left: auto;
     }
 
-    /* Stats grid */
+    /* ── Stats Grid ───────────────────────────────── */
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -169,9 +190,8 @@
     .stat-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
-      text-align: center;
+      border-radius: 10px;
+      padding: 0.875rem 1rem;
     }
 
     .stat-value {
@@ -182,39 +202,41 @@
     }
 
     .stat-label {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 500;
       color: var(--text-secondary);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-top: 0.375rem;
+      letter-spacing: 0.08em;
+      margin-top: 0.25rem;
+      font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Ticket breakdown */
-    .tickets-section {
+    /* ── Ticket Bar ───────────────────────────────── */
+    .ticket-section {
       margin-top: 0.75rem;
     }
 
-    .ticket-bar {
+    .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
+      border-radius: 10px;
+      padding: 0.875rem 1rem;
     }
 
-    .ticket-bar-label {
-      font-size: 0.7rem;
+    .card-label {
+      font-size: 0.65rem;
       font-weight: 500;
       color: var(--text-secondary);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       margin-bottom: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .ticket-bar-visual {
       display: flex;
-      height: 8px;
-      border-radius: 4px;
+      height: 6px;
+      border-radius: 3px;
       overflow: hidden;
       background: var(--border);
     }
@@ -223,16 +245,17 @@
       transition: width 0.5s ease;
     }
 
-    .ticket-bar-visual .done { background: var(--green); }
-    .ticket-bar-visual .doing { background: var(--accent); }
+    .ticket-bar-visual .done { background: var(--accent); }
+    .ticket-bar-visual .doing { background: var(--green); }
     .ticket-bar-visual .todo { background: var(--yellow); }
 
     .ticket-legend {
       display: flex;
       justify-content: space-between;
       margin-top: 0.5rem;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .ticket-legend span {
@@ -242,14 +265,14 @@
     }
 
     .legend-dot {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       display: inline-block;
     }
 
-    /* Done chart */
-    .done-chart-section {
+    /* ── Done Chart ───────────────────────────────── */
+    .done-section {
       margin-top: 0.75rem;
     }
 
@@ -257,24 +280,25 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.5rem;
     }
 
-    .done-chart-header .ticket-bar-label {
+    .done-chart-header .card-label {
       margin-bottom: 0;
     }
 
     .done-total {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 600;
-      color: var(--green);
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .done-chart {
       display: flex;
       align-items: flex-end;
-      gap: 4px;
-      height: 64px;
+      gap: 3px;
+      height: 48px;
     }
 
     .done-bar-group {
@@ -282,50 +306,37 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
 
     .done-bar {
       width: 100%;
-      background: var(--green);
-      border-radius: 3px 3px 0 0;
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
       min-height: 2px;
       transition: height 0.5s ease;
-      opacity: 0.8;
+      opacity: 0.7;
     }
 
-    .done-bar:hover {
-      opacity: 1;
-    }
+    .done-bar:hover { opacity: 1; }
 
     .done-bar-label {
-      font-size: 0.6rem;
+      font-size: 0.55rem;
       color: var(--text-secondary);
       white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .done-bar-count {
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       font-weight: 600;
       color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Activity section */
+    /* ── Activity ─────────────────────────────────── */
     .activity-section {
       margin-top: 0.75rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
-    }
-
-    .activity-title {
-      font-size: 0.7rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 0.5rem;
     }
 
     .activity-item {
@@ -333,7 +344,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 0.375rem 0;
-      font-size: 0.875rem;
+      font-size: 0.8rem;
     }
 
     .activity-item + .activity-item {
@@ -342,18 +353,20 @@
 
     .activity-item-label {
       color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
     }
 
     .activity-item-value {
       font-weight: 600;
     }
 
-    /* Footer */
+    /* ── Footer ───────────────────────────────────── */
     .footer {
-      margin-top: 2rem;
-      text-align: center;
-      font-size: 0.75rem;
+      margin-top: 1.5rem;
+      font-size: 0.7rem;
       color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .footer a {
@@ -361,17 +374,11 @@
       text-decoration: none;
     }
 
-    .footer a:hover {
-      text-decoration: underline;
-    }
+    .footer a:hover { text-decoration: underline; }
 
-    /* Debug panel (hidden by default) */
+    /* ── Debug Panel ──────────────────────────────── */
     .debug-panel {
       margin-top: 1.5rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
     }
 
     .debug-panel select {
@@ -380,29 +387,66 @@
       border: 1px solid var(--border);
       background: var(--bg);
       color: var(--text);
-      font-family: inherit;
-      font-size: 0.875rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
       cursor: pointer;
       width: 100%;
     }
 
-    .debug-label {
-      font-size: 0.7rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 0.375rem;
-    }
+    /* ── Mobile: Horizontal Split (top/bottom) ──── */
+    @media (max-width: 768px) {
+      .split {
+        flex-direction: column;
+      }
 
-    /* Responsive */
-    @media (max-width: 400px) {
+      .panel-avatar {
+        flex: 1;
+        min-height: 0;
+      }
+
+      .avatar-wrapper {
+        width: min(60vw, 45vh, 320px);
+        height: min(60vw, 45vh, 320px);
+        border-radius: 12px;
+      }
+
+      .panel-status {
+        flex: 1;
+        padding: 1.5rem;
+        justify-content: flex-start;
+        overflow-y: auto;
+      }
+
+      .name {
+        font-size: 1.75rem;
+      }
+
       .stats-grid {
-        grid-template-columns: 1fr 1fr;
         gap: 0.5rem;
       }
-      .stat-value { font-size: 1.5rem; }
-      .avatar-wrapper { width: 200px; height: 200px; border-radius: 10px; }
+
+      .stat-value {
+        font-size: 1.5rem;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .panel-status {
+        padding: 1rem;
+      }
+
+      .avatar-wrapper {
+        width: min(55vw, 40vh, 260px);
+        height: min(55vw, 40vh, 260px);
+      }
+
+      .name {
+        font-size: 1.5rem;
+      }
+
+      .stat-value {
+        font-size: 1.25rem;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -412,106 +456,111 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="avatar-section">
+  <div class="split">
+    <!-- Left / Top: Avatar -->
+    <div class="panel-avatar">
       <div class="avatar-bounce" id="avatar-bounce">
         <div class="avatar-wrapper">
           <svg id="avatar"></svg>
         </div>
       </div>
-      <div class="name">Justin</div>
-      <div class="tagline">Autonomous AI Agent • Chief of Staff</div>
-      <div class="status-badge status-active" id="status-badge">
-        <div class="status-dot"></div>
-        <span id="status-text">Online</span>
-      </div>
     </div>
 
-    <div class="active-now-card" id="active-now-card" style="display:none">
-      <div class="ticket-bar">
-        <div class="active-now-content">
+    <!-- Right / Bottom: Status -->
+    <div class="panel-status">
+      <div class="status-content">
+        <div class="name">Justin</div>
+        <div class="tagline">autonomous ai agent · chief of staff</div>
+        <div class="status-badge status-active" id="status-badge">
+          <div class="status-dot"></div>
+          <span id="status-text">Online</span>
+        </div>
+
+        <div class="active-now" id="active-now-card" style="display:none">
           <div class="active-now-dot"></div>
-          <span class="active-now-label">Active ticket sessions</span>
+          <span class="active-now-label">active sessions</span>
           <span class="active-now-count" id="active-now-count">0</span>
         </div>
-      </div>
-    </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value" id="days-alive">—</div>
-        <div class="stat-label">Days Alive</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="uptime">—</div>
-        <div class="stat-label">Uptime</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="tickets-done">—</div>
-        <div class="stat-label">Tickets Done</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="total-commits">—</div>
-        <div class="stat-label">Commits</div>
-      </div>
-    </div>
-
-    <div class="tickets-section">
-      <div class="ticket-bar">
-        <div class="ticket-bar-label">Board</div>
-        <div class="ticket-bar-visual" id="ticket-bar">
-          <div class="segment todo" style="width: 0%"></div>
-          <div class="segment doing" style="width: 0%"></div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="days-alive">—</div>
+            <div class="stat-label">Days Alive</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="uptime">—</div>
+            <div class="stat-label">Uptime</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="tickets-done">—</div>
+            <div class="stat-label">Tickets Done</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="total-commits">—</div>
+            <div class="stat-label">Commits</div>
+          </div>
         </div>
-        <div class="ticket-legend">
-          <span><span class="legend-dot" style="background: var(--yellow)"></span> To Do <b id="todo-count">0</b></span>
-          <span><span class="legend-dot" style="background: var(--accent)"></span> Doing <b id="doing-count">0</b></span>
+
+        <div class="ticket-section">
+          <div class="card">
+            <div class="card-label">Board</div>
+            <div class="ticket-bar-visual" id="ticket-bar">
+              <div class="segment todo" style="width: 0%"></div>
+              <div class="segment doing" style="width: 0%"></div>
+            </div>
+            <div class="ticket-legend">
+              <span><span class="legend-dot" style="background: var(--yellow)"></span> To Do <b id="todo-count">0</b></span>
+              <span><span class="legend-dot" style="background: var(--green)"></span> Doing <b id="doing-count">0</b></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="done-section">
+          <div class="card">
+            <div class="done-chart-header">
+              <div class="card-label">Tickets Done</div>
+              <div class="done-total" id="done-total">0 all time</div>
+            </div>
+            <div class="done-chart" id="done-chart"></div>
+          </div>
+        </div>
+
+        <div class="activity-section">
+          <div class="card">
+            <div class="card-label">Activity</div>
+            <div class="activity-item">
+              <span class="activity-item-label">last seen</span>
+              <span class="activity-item-value" id="last-seen">—</span>
+            </div>
+            <div class="activity-item">
+              <span class="activity-item-label">born</span>
+              <span class="activity-item-value" id="born-date">March 24, 2026</span>
+            </div>
+            <div class="activity-item">
+              <span class="activity-item-label">today's commits</span>
+              <span class="activity-item-value" id="today-commits">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <a href="https://justin.vin">justin.vin</a>
+        </div>
+
+        <!-- Debug panel (shown with ?debug in URL) -->
+        <div class="debug-panel" id="debug-panel" style="display:none">
+          <div class="card-label">Status Override</div>
+          <select id="status-select">
+            <option value="active">Active</option>
+            <option value="idle">Idle</option>
+            <option value="working">Working</option>
+            <option value="sleeping">Sleeping</option>
+            <option value="deep_sleep">Deep Sleep</option>
+            <option value="dead">Dead</option>
+            <option value="error">Error</option>
+          </select>
         </div>
       </div>
-    </div>
-
-    <div class="done-chart-section">
-      <div class="ticket-bar">
-        <div class="done-chart-header">
-          <div class="ticket-bar-label">Tickets Done</div>
-          <div class="done-total" id="done-total">0 all time</div>
-        </div>
-        <div class="done-chart" id="done-chart"></div>
-      </div>
-    </div>
-
-    <div class="activity-section">
-      <div class="activity-title">Activity</div>
-      <div class="activity-item">
-        <span class="activity-item-label">Last seen</span>
-        <span class="activity-item-value" id="last-seen">—</span>
-      </div>
-      <div class="activity-item">
-        <span class="activity-item-label">Born</span>
-        <span class="activity-item-value" id="born-date">March 24, 2026</span>
-      </div>
-      <div class="activity-item">
-        <span class="activity-item-label">Today's commits</span>
-        <span class="activity-item-value" id="today-commits">—</span>
-      </div>
-    </div>
-
-    <div class="footer">
-      <p><a href="https://justin.vin">justin.vin</a></p>
-    </div>
-
-    <!-- Debug: status selector (shown with ?debug in URL) -->
-    <div class="debug-panel" id="debug-panel" style="display:none">
-      <div class="debug-label">Status Override</div>
-      <select id="status-select">
-        <option value="active">Active</option>
-        <option value="idle">Idle</option>
-        <option value="working">Working</option>
-        <option value="sleeping">Sleeping</option>
-        <option value="deep_sleep">Deep Sleep</option>
-        <option value="dead">Dead</option>
-        <option value="error">Error</option>
-      </select>
     </div>
   </div>
 
@@ -536,36 +585,31 @@
       const badge = document.getElementById('status-badge');
       const text = document.getElementById('status-text');
       badge.className = `status-badge status-${status.replace('_', '-')}`;
-      // Map deep_sleep to sleeping class
       if (status === 'deep_sleep') badge.className = 'status-badge status-sleeping';
       text.textContent = STATUS_LABELS[status] || status;
     }
 
     // ── Data Rendering ─────────────────────────────────
     function renderData(data) {
-      // Status
       const status = data.status || 'active';
       avatar.setStatus(status);
       updateStatusBadge(status);
 
-      // Active session count
       const activeSessions = data.activeSessions || 0;
       const activeCard = document.getElementById('active-now-card');
       if (activeSessions > 0) {
-        activeCard.style.display = 'block';
+        activeCard.style.display = 'flex';
         document.getElementById('active-now-count').textContent = activeSessions;
       } else {
         activeCard.style.display = 'none';
       }
 
-      // Stats
       document.getElementById('days-alive').textContent = data.daysAlive ?? '—';
       document.getElementById('uptime').textContent = data.uptime?.percentage
         ? `${data.uptime.percentage}%` : '—';
       document.getElementById('tickets-done').textContent = data.tickets?.done ?? '—';
       document.getElementById('total-commits').textContent = data.commits?.total ?? '—';
 
-      // Ticket bar (only todo + doing, no done)
       const tickets = data.tickets || {};
       const activeTotal = (tickets.doing || 0) + (tickets.todo || 0);
       if (activeTotal > 0) {
@@ -577,18 +621,17 @@
       document.getElementById('doing-count').textContent = tickets.doing || 0;
       document.getElementById('todo-count').textContent = tickets.todo || 0;
 
-      // Done chart
       const doneDaily = data.doneDaily || {};
       const doneTotal = Object.values(doneDaily).reduce((a, b) => a + b, 0) || tickets.done || 0;
       document.getElementById('done-total').textContent = `${doneTotal} all time`;
-      
+
       const chartEl = document.getElementById('done-chart');
       const days = Object.keys(doneDaily).sort();
       if (days.length > 0) {
         const maxDone = Math.max(...Object.values(doneDaily), 1);
         chartEl.innerHTML = days.map(day => {
           const count = doneDaily[day];
-          const height = Math.max(2, (count / maxDone) * 52);
+          const height = Math.max(2, (count / maxDone) * 40);
           const label = new Date(day + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           return `<div class="done-bar-group">
             <div class="done-bar-count">${count}</div>
@@ -598,7 +641,6 @@
         }).join('');
       }
 
-      // Activity
       if (data.lastSeen) {
         const ago = timeAgo(new Date(data.lastSeen));
         document.getElementById('last-seen').textContent = ago;
@@ -618,39 +660,34 @@
       return `${days}d ago`;
     }
 
-    // ── Determine status from lastSeen ─────────────────
     function deriveStatus(lastSeen) {
       if (!lastSeen) return 'active';
       const diff = Date.now() - new Date(lastSeen).getTime();
       const mins = diff / 60000;
       if (mins < 10) return 'active';
       if (mins < 30) return 'idle';
-      if (mins < 120) return 'sleeping';    // 2h
-      if (mins < 1440) return 'deep_sleep'; // 24h
+      if (mins < 120) return 'sleeping';
+      if (mins < 1440) return 'deep_sleep';
       return 'dead';
     }
 
     // ── Fetch Data ─────────────────────────────────────
     async function fetchStatus() {
       try {
-        // Try live endpoint first, fall back to cached status.json
         let resp;
         try {
           resp = await fetch('https://hooks.justin.vin/plugins/status-api/status');
           if (!resp.ok) throw new Error('Live endpoint failed');
         } catch (e) {
-          // Live endpoint down — try cached
           resp = await fetch('/status.json?_=' + Date.now());
         }
         if (!resp.ok) throw new Error('Failed to fetch');
         const data = await resp.json();
-        // Auto-derive status from lastSeen if not provided
         if (!data.status) {
           data.status = deriveStatus(data.lastSeen);
         }
         renderData(data);
       } catch (e) {
-        // Bridge is down — show dead state
         renderData({
           status: 'dead',
           daysAlive: Math.ceil((Date.now() - new Date('2026-03-24').getTime()) / 86400000),
@@ -674,7 +711,7 @@
 
     // ── Init ───────────────────────────────────────────
     fetchStatus();
-    setInterval(fetchStatus, 10000); // Refresh every 10s (live endpoint)
+    setInterval(fetchStatus, 10000);
   </script>
 </body>
 </html>
