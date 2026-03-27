@@ -1,5 +1,5 @@
 {
-    "lastSeen": "2026-03-27T22:50:13.305Z",
+    "lastSeen": "2026-03-27T22:55:13.104Z",
     "daysAlive": 4,
     "uptime": {
         "hours": 96,
@@ -7,7 +7,7 @@
     },
     "activeSessions": 1,
     "tickets": {
-        "todo": 7,
+        "todo": 8,
         "doing": 1,
         "done": 42
     },
