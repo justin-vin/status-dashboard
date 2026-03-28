@@ -19,12 +19,12 @@ const DEAD_PALETTE = {
 const TRAITS = {
   eyeShape: 'oval',
   brows: 'arched',
-  eyeSpacing: 10,
+  eyeSpacing: 8,
   eyeSize: 1.0,
   eyeY: -0.5,
-  // known.life oval eye dimensions (from svg.ts renderEye)
-  eyeRx: 2.8,
-  eyeRy: 4.0,
+  // known.life oval eye dimensions, scaled up
+  eyeRx: 3.3,
+  eyeRy: 4.7,
 };
 
 // ── Animation Math ──────────────────────────────────────────────────
