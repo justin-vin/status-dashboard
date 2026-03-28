@@ -19,9 +19,11 @@ const DEAD_PALETTE = {
 const TRAITS = {
   eyeShape: 'dot',
   brows: 'arched',
-  eyeSpacing: 12,
+  eyeSpacing: 9,
   eyeSize: 1.0,
   eyeY: 0,
+  eyeRx: 2.5,   // wider radius (horizontal)
+  eyeRy: 3.8,   // taller radius (vertical) — known.life style
 };
 
 // ── Animation Math ──────────────────────────────────────────────────
@@ -287,11 +289,11 @@ class AvatarAnimator {
     this.leftBrow.setAttribute('fill', 'none');
     this.leftBrow.setAttribute('stroke-width', '1.3');
     this.leftBrow.setAttribute('stroke-linecap', 'round');
-    this.leftBrow.setAttribute('opacity', '0.65');
+    this.leftBrow.setAttribute('opacity', '0.50');
     this.rightBrow.setAttribute('fill', 'none');
     this.rightBrow.setAttribute('stroke-width', '1.3');
     this.rightBrow.setAttribute('stroke-linecap', 'round');
-    this.rightBrow.setAttribute('opacity', '0.65');
+    this.rightBrow.setAttribute('opacity', '0.50');
     this.faceGroup.appendChild(this.leftBrow);
     this.faceGroup.appendChild(this.rightBrow);
 
@@ -325,23 +327,27 @@ class AvatarAnimator {
       return;
     }
 
-    // Dot eyes — amplified gaze for visible "looking around"
-    const r = 2.2 * yScale;
+    // Tall ellipse eyes — known.life style, black fill
+    const rx = (TRAITS.eyeRx || 2.5) * yScale;
+    const ry = (TRAITS.eyeRy || 3.8) * yScale;
     this.leftEyeGroup.innerHTML = '';
     this.rightEyeGroup.innerHTML = '';
 
-    const gazeAmplify = 1.8; // Make gaze movement more visible
-    const leftEye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    leftEye.setAttribute('r', String(r));
-    leftEye.setAttribute('fill', fg);
+    const gazeAmplify = 1.8;
+    const eyeFill = '#000000'; // black eyes
+    const leftEye = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+    leftEye.setAttribute('rx', String(rx));
+    leftEye.setAttribute('ry', String(ry));
+    leftEye.setAttribute('fill', eyeFill);
     leftEye.setAttribute('cx', String(gazeX * gazeAmplify));
     leftEye.setAttribute('cy', String(gazeY * gazeAmplify * yScale));
     this.leftEyeGroup.setAttribute('transform', `translate(${leftX},${centerY}) scale(${size})`);
     this.leftEyeGroup.appendChild(leftEye);
 
-    const rightEye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    rightEye.setAttribute('r', String(r));
-    rightEye.setAttribute('fill', fg);
+    const rightEye = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+    rightEye.setAttribute('rx', String(rx));
+    rightEye.setAttribute('ry', String(ry));
+    rightEye.setAttribute('fill', eyeFill);
     rightEye.setAttribute('cx', String(gazeX * gazeAmplify));
     rightEye.setAttribute('cy', String(gazeY * gazeAmplify * yScale));
     this.rightEyeGroup.setAttribute('transform', `translate(${rightX},${centerY}) scale(${size})`);
