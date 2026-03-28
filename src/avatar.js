@@ -17,11 +17,14 @@ const DEAD_PALETTE = {
 };
 
 const TRAITS = {
-  eyeShape: 'dot',
+  eyeShape: 'oval',
   brows: 'arched',
   eyeSpacing: 10,
   eyeSize: 1.0,
-  eyeY: 0,
+  eyeY: -0.5,
+  // known.life oval eye dimensions (from svg.ts renderEye)
+  eyeRx: 2.8,
+  eyeRy: 4.0,
 };
 
 // ── Animation Math ──────────────────────────────────────────────────
@@ -325,22 +328,25 @@ class AvatarAnimator {
       return;
     }
 
-    // Dot eyes — amplified gaze for visible "looking around"
-    const r = 3.4 * yScale;
+    // Oval eyes — known.life first lifeform style (rx:2.8 ry:4.0), white fill
+    const rx = (TRAITS.eyeRx || 2.8);
+    const ry = (TRAITS.eyeRy || 4.0) * yScale;
     this.leftEyeGroup.innerHTML = '';
     this.rightEyeGroup.innerHTML = '';
 
-    const gazeAmplify = 1.8; // Make gaze movement more visible
-    const leftEye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    leftEye.setAttribute('r', String(r));
+    const gazeAmplify = 1.8;
+    const leftEye = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+    leftEye.setAttribute('rx', String(rx));
+    leftEye.setAttribute('ry', String(ry));
     leftEye.setAttribute('fill', fg);
     leftEye.setAttribute('cx', String(gazeX * gazeAmplify));
     leftEye.setAttribute('cy', String(gazeY * gazeAmplify * yScale));
     this.leftEyeGroup.setAttribute('transform', `translate(${leftX},${centerY}) scale(${size})`);
     this.leftEyeGroup.appendChild(leftEye);
 
-    const rightEye = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    rightEye.setAttribute('r', String(r));
+    const rightEye = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+    rightEye.setAttribute('rx', String(rx));
+    rightEye.setAttribute('ry', String(ry));
     rightEye.setAttribute('fill', fg);
     rightEye.setAttribute('cx', String(gazeX * gazeAmplify));
     rightEye.setAttribute('cy', String(gazeY * gazeAmplify * yScale));
