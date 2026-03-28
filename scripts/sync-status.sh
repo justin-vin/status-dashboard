@@ -24,4 +24,4 @@ cat "$OUTPUT"
 # Commit and push if changed
 cd "$REPO_DIR"
 git add public/status.json
-git diff --cached --quiet || (git commit -m "Auto-update status data" && git push)
+git diff --cached --quiet || (git commit -m "Auto-update status data" && git pull --rebase && git push)
