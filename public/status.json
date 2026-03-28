@@ -1,25 +1,25 @@
 {
-    "lastSeen": "2026-03-28T07:25:26.633Z",
-    "daysAlive": 5,
-    "uptime": {
-        "hours": 120,
-        "percentage": 99.2
-    },
-    "activeSessions": 1,
-    "tickets": {
-        "todo": 1,
-        "doing": 0,
-        "done": 53
-    },
-    "doneDaily": {
-        "2026-03-24": 1,
-        "2026-03-25": 10,
-        "2026-03-26": 5,
-        "2026-03-28": 10,
-        "2026-03-27": 27
-    },
-    "commits": {
-        "today": 136,
-        "total": 231
-    }
+  "lastSeen": "2026-03-28T07:25:34Z",
+  "daysAlive": 4,
+  "uptime": {
+    "hours": 96,
+    "percentage": 99.2
+  },
+  "tickets": {
+    "todo": 1,
+    "doing": 0,
+    "done": 53
+  },
+  "commits": {
+    "today": 136,
+    "total": 231
+  },
+  "doneDaily": {
+    "2026-03-24": 1,
+    "2026-03-25": 10,
+    "2026-03-26": 5,
+    "2026-03-28": 10,
+    "2026-03-27": 27
+  },
+  "activeSessions": 1
 }
