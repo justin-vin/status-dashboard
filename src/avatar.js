@@ -287,11 +287,11 @@ class AvatarAnimator {
     this.leftBrow.setAttribute('fill', 'none');
     this.leftBrow.setAttribute('stroke-width', '1.3');
     this.leftBrow.setAttribute('stroke-linecap', 'round');
-    this.leftBrow.setAttribute('opacity', '0.65');
+    this.leftBrow.setAttribute('opacity', '0.50');
     this.rightBrow.setAttribute('fill', 'none');
     this.rightBrow.setAttribute('stroke-width', '1.3');
     this.rightBrow.setAttribute('stroke-linecap', 'round');
-    this.rightBrow.setAttribute('opacity', '0.65');
+    this.rightBrow.setAttribute('opacity', '0.50');
     this.faceGroup.appendChild(this.leftBrow);
     this.faceGroup.appendChild(this.rightBrow);
 
@@ -326,7 +326,7 @@ class AvatarAnimator {
     }
 
     // Dot eyes — amplified gaze for visible "looking around"
-    const r = 2.8 * yScale;
+    const r = 3.4 * yScale;
     this.leftEyeGroup.innerHTML = '';
     this.rightEyeGroup.innerHTML = '';
 
