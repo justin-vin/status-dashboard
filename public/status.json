@@ -1,11 +1,11 @@
 {
-    "lastSeen": "2026-03-28T00:20:13.338Z",
+    "lastSeen": "2026-03-28T00:25:13.150Z",
     "daysAlive": 5,
     "uptime": {
         "hours": 120,
         "percentage": 99.2
     },
-    "activeSessions": 1,
+    "activeSessions": 0,
     "tickets": {
         "todo": 10,
         "doing": 1,
