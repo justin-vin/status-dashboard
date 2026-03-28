@@ -1,5 +1,5 @@
 {
-  "lastSeen": "2026-03-28T08:51:27Z",
+  "lastSeen": "2026-03-28T09:54:05Z",
   "daysAlive": 4,
   "uptime": {
     "hours": 96,
@@ -11,8 +11,8 @@
     "done": 53
   },
   "commits": {
-    "today": 205,
-    "total": 300
+    "today": 88,
+    "total": 183
   },
   "doneDaily": {
     "2026-03-24": 1,
