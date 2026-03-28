@@ -19,7 +19,7 @@ const DEAD_PALETTE = {
 const TRAITS = {
   eyeShape: 'dot',
   brows: 'arched',
-  eyeSpacing: 12,
+  eyeSpacing: 10,
   eyeSize: 1.0,
   eyeY: 0,
 };
@@ -326,7 +326,7 @@ class AvatarAnimator {
     }
 
     // Dot eyes — amplified gaze for visible "looking around"
-    const r = 2.2 * yScale;
+    const r = 2.8 * yScale;
     this.leftEyeGroup.innerHTML = '';
     this.rightEyeGroup.innerHTML = '';
 
